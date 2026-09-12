@@ -1,0 +1,85 @@
+/* =========================================================
+   URBAN BURGERS — THEME
+   ========================================================= */
+
+:root {
+  /* =========================
+     CORES PRINCIPAIS
+     ========================= */
+
+  --color-primary: #f5a900;
+  --color-primary-hover: #ffb81c;
+  --color-primary-dark: #c98400;
+
+  --color-black: #080808;
+  --color-black-soft: #101010;
+  --color-black-light: #181818;
+
+  --color-white: #ffffff;
+  --color-white-soft: #f5f5f5;
+
+  --color-gray-100: #eeeeee;
+  --color-gray-200: #d6d6d6;
+  --color-gray-300: #a8a8a8;
+  --color-gray-400: #777777;
+  --color-gray-500: #555555;
+
+  /* =========================
+     CORES DE FUNDO
+     ========================= */
+
+  --background-primary: var(--color-black);
+  --background-secondary: var(--color-black-soft);
+  --background-card: var(--color-black-light);
+
+  /* =========================
+     TEXTOS
+     ========================= */
+
+  --text-primary: var(--color-white);
+  --text-secondary: #cfcfcf;
+  --text-muted: #858585;
+
+  --text-dark: #101010;
+  --text-dark-secondary: #4a4a4a;
+
+  --text-accent: var(--color-primary);
+
+  /* =========================
+     BORDAS
+     ========================= */
+
+  --border-color: #292929;
+  --border-light: #dedede;
+  --border-accent: var(--color-primary);
+
+  /* =========================
+     TIPOGRAFIA
+     ========================= */
+
+  --font-primary: "League Spartan", sans-serif;
+  --font-secondary: "Montserrat", sans-serif;
+
+  --title: 6rem;
+  --text: 1rem;
+  --text-small: 0.875rem;
+
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+
+  /* =========================
+     BORDAS / RADIUS
+     ========================= */
+
+  --radius: 4px;
+  --radius-full: 9999px;
+
+  /* =========================
+     SOMBRAS
+     ========================= */
+
+  --shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}

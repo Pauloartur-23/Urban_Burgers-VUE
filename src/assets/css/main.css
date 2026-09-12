@@ -1,0 +1,30 @@
+@import './reset.css';
+@import '@mdi/font/css/materialdesignicons.min.css';
+@import '@fontsource/inter';
+@import '@fontsource/playfair-display';
+@import '@fontsource/merriweather';
+@import '@fontsource/jetbrains-mono';
+@import '@fontsource/pacifico';
+@import '@fontsource/bebas-neue';
+@import '@fontsource/press-start-2p';
+@import '@fontsource/unifrakturmaguntia';
+@import '@fontsource/orbitron';
+
+body {
+  font-family: 'inter';
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--background-primary);
+}
+
+h1 {
+  font-size: var(--title);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.highlight {
+  color: var(--color-primary);
+}
