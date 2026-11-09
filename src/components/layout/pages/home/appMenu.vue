@@ -1,287 +1,199 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useMenuStore } from '@/assets/data/menu.js';
-import AppCircleButton from '@/components/buttons/appCircleButton.vue';
+import MenuCard from '@/components/menu/MenuCard.vue';
 
-const { menu } = useMenuStore();
+const menuStore = useMenuStore();
+const { menu } = storeToRefs(menuStore);
 
-const selectedPartId = ref(1);
+const carregando = ref(true);
+const erro = ref(false);
+const selecionadaId = ref(null);
 
-function clickmenu(id) {
-    selectedPartId.value = id;
-}
+// mostra só categorias com itens; a primeira fica selecionada
+const categorias = computed(() => menu.value.filter((c) => c.itens.length));
+const categoriaAtual = computed(
+    () => categorias.value.find((c) => c.id === selecionadaId.value) ?? categorias.value[0]
+);
 
-function menuImage(img) {
-    return new URL(`../../../../assets/images/menu/${img}`, import.meta.url).href;
-}
-
-function hideBrokenImage(event) {
-    event.target.style.display = 'none';
-}
+onMounted(async () => {
+    try {
+        await menuStore.garantirMenu();
+    } catch {
+        erro.value = true;
+    } finally {
+        carregando.value = false;
+    }
+});
 </script>
 
 <template>
-    <section id="cardapio" class="menu-section">
-        <div class="menu-header">
-            <div>
-                <p class="menu-eyebrow"><span class="menu-eyebrow-line"></span>CARDÁPIO</p>
-                <h2>ESCOLHA SEU <span class="highlight">URBAN</span></h2>
+    <section id="cardapio" class="section">
+        <div class="container">
+            <div v-reveal class="menu-header">
+                <div>
+                    <p class="eyebrow">Cardápio</p>
+                    <h2 class="section-title">Escolha seu <span class="highlight">Urban</span></h2>
+                </div>
+                <div class="menu-header-lado">
+                    <p class="section-lead">Monte seu pedido, escolha onde entregar e finalize direto pelo WhatsApp.</p>
+                    <router-link to="/cardapio" class="menu-ver-tudo">
+                        Ver cardápio completo <span class="mdi mdi-arrow-right"></span>
+                    </router-link>
+                </div>
             </div>
-            <a href="#" class="menu-see-all">
-                Ver Cardápio completo
-                <span class="mdi mdi-arrow-right"></span>
-            </a>
-        </div>
 
-        <ul class="menu-tabs">
-            <li v-for="part in menu" :key="part.id">
-                <a
-                    :href="part.link"
+            <div v-if="categorias.length" class="menu-tabs" role="tablist" aria-label="Categorias do cardápio">
+                <button
+                    v-for="cat in categorias"
+                    :key="cat.id"
+                    type="button"
+                    role="tab"
                     class="menu-tab"
-                    :class="{ 'is-active': selectedPartId === part.id }"
-                    @click.prevent="clickmenu(part.id)"
-                >{{ part.name }}</a>
-            </li>
-        </ul>
+                    :class="{ 'is-active': categoriaAtual?.id === cat.id }"
+                    :aria-selected="categoriaAtual?.id === cat.id"
+                    @click="selecionadaId = cat.id"
+                >
+                    {{ cat.name }} <span class="menu-tab-count">{{ cat.itens.length }}</span>
+                </button>
+            </div>
 
-        <div>
-            <div v-for="part in menu" :key="part.id" v-show="selectedPartId === part.id" class="menu-grid">
-                <a v-for="item in part.itens" :key="item.id" :href="item.link" class="menu-card">
-                    <div class="menu-card-image">
-                        <img :src="menuImage(item.img)" :alt="item.name" @error="hideBrokenImage" />
-                    </div>
-                    <div class="menu-card-body">
-                        <h3>{{ item.name }}</h3>
-                        <p class="menu-card-desc">{{ item.desc }}</p>
-                        <div class="menu-card-footer">
-                            <p class="menu-card-price">R$ {{ item.preco.toFixed(2) }}</p>
-                            <div class="menu-card-actions">
-                                <AppCircleButton aria-label="Favoritar" @click.prevent>
-                                    <span class="mdi mdi-heart"></span>
-                                </AppCircleButton>
-                                <AppCircleButton aria-label="Adicionar" @click.prevent>
-                                    <span class="mdi mdi-plus"></span>
-                                </AppCircleButton>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+            <div v-if="carregando" class="menu-grid">
+                <div v-for="n in 3" :key="n" class="menu-skeleton"></div>
+            </div>
+
+            <p v-else-if="erro" class="menu-aviso">
+                <span class="mdi mdi-wifi-off"></span> Não foi possível carregar o cardápio agora. Tente novamente em instantes.
+            </p>
+
+            <p v-else-if="!categoriaAtual" class="menu-aviso">O cardápio ainda está vazio.</p>
+
+            <div v-else class="menu-grid">
+                <MenuCard v-for="(item, i) in categoriaAtual.itens" :key="item.id" v-reveal="i * 80" :item="item" />
             </div>
         </div>
     </section>
 </template>
 
 <style scoped>
-section.menu-section {
-    padding: 100px 200px;
-}
-
 .menu-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 40px;
+    gap: 24px 48px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
 }
 
-.menu-eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    color: var(--text-secondary);
-    font-size: var(--text-small);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-}
-
-.menu-eyebrow-line {
-    width: 32px;
-    height: 2px;
-    background-color: var(--color-primary);
-}
-
-.menu-header h2 {
-    font-family: 'Bebas Neue', var(--font-secondary);
-    font-size: clamp(2.5rem, 5vw, 3.5rem);
-    font-weight: var(--font-weight-bold);
-    line-height: 1;
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
-}
-
-.menu-see-all {
+.menu-ver-tudo {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    flex-shrink: 0;
+    margin-top: 14px;
     color: var(--color-primary);
     font-size: var(--text-small);
-    font-weight: var(--font-weight-bold);
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
     text-decoration: none;
-    padding-bottom: 6px;
     transition: gap 0.2s ease, color 0.2s ease;
 }
 
-.menu-see-all:hover {
-    gap: 12px;
+.menu-ver-tudo:hover {
+    gap: 14px;
     color: var(--color-primary-hover);
+}
+
+.menu-header .section-lead {
+    max-width: 38ch;
 }
 
 .menu-tabs {
     display: flex;
-    flex-wrap: wrap;
-    gap: 36px;
-    list-style: none;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 24px;
-    margin-bottom: 40px;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 36px;
+    scrollbar-width: none;
 }
 
 .menu-tab {
-    position: relative;
-    display: inline-block;
-    padding-bottom: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 10px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    background: none;
     color: var(--text-secondary);
+    font: inherit;
     font-size: var(--text-small);
-    font-weight: var(--font-weight-bold);
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    text-decoration: none;
-    transition: color 0.2s ease;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
-.menu-tab::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 0;
-    height: 2px;
-    background-color: var(--color-primary);
-    transition: width 0.25s ease;
-}
-
-.menu-tab:hover,
-.menu-tab:focus-visible {
-    color: var(--color-primary);
-}
-
-.menu-tab:hover::after,
-.menu-tab:focus-visible::after {
-    width: 100%;
+.menu-tab:hover {
+    color: var(--text-primary);
+    border-color: var(--color-gray-500);
 }
 
 .menu-tab.is-active {
-    color: var(--color-primary);
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #111;
 }
 
-.menu-tab.is-active::after {
-    width: 100%;
+.menu-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: var(--radius-full);
+    background-color: rgba(255, 255, 255, 0.08);
+    font-size: 0.72rem;
+}
+
+.menu-tab.is-active .menu-tab-count {
+    background-color: rgba(0, 0, 0, 0.15);
 }
 
 .menu-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+    gap: 28px;
 }
 
-.menu-card {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--background-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    overflow: hidden;
-    text-decoration: none;
-    color: var(--text-primary);
-    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+.menu-skeleton {
+    height: 420px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(100deg, #141414 30%, #1f1f1f 50%, #141414 70%) 0 0 / 300% 100%;
+    animation: brilho 1.4s ease-in-out infinite;
 }
 
-.menu-card:hover {
-    transform: translateY(-6px);
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow);
-}
-
-.menu-card-image {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    background-color: var(--background-secondary);
-    overflow: hidden;
-}
-
-.menu-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.35s ease;
-}
-
-.menu-card:hover .menu-card-image img {
-    transform: scale(1.06);
-}
-
-.menu-card-body {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    padding: 20px;
-}
-
-.menu-card-body h3 {
-    font-family: 'Bebas Neue', var(--font-secondary);
-    font-size: 1.4rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-}
-
-.menu-card-desc {
-    flex: 1;
+.menu-aviso {
+    padding: 40px;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-lg);
     color: var(--text-secondary);
-    font-size: var(--text-small);
-    line-height: 1.5;
-    margin-bottom: 20px;
+    text-align: center;
 }
 
-.menu-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
-}
-
-.menu-card-price {
-    font-size: 1.15rem;
-    font-weight: var(--font-weight-bold);
-    color: var(--color-primary);
-}
-
-.menu-card-actions {
-    display: flex;
-    gap: 10px;
-}
-
-@media (max-width: 1024px) {
-    section.menu-section {
-        padding: 80px 24px;
+@keyframes brilho {
+    to {
+        background-position: -150% 0;
     }
 }
 
-@media (max-width: 640px) {
-    .menu-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .menu-grid {
-        grid-template-columns: 1fr;
+@media (prefers-reduced-motion: reduce) {
+    .menu-skeleton {
+        animation: none;
     }
 }
 </style>

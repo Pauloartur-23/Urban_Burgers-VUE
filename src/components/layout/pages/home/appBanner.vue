@@ -1,22 +1,40 @@
 <script setup>
 import AppBorderButton from '@/components/buttons/appBorderButton.vue';
 import AppButton from '@/components/buttons/appButton.vue';
+import { useCartStore } from '@/stores/cart.js';
+import { useStatusLoja } from '@/composables/useStatusLoja.js';
+import { brl } from '@/utils/formato.js';
 
+const cart = useCartStore();
+const statusLoja = useStatusLoja();
+
+const rolarPara = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 </script>
 
 <template>
   <section id="home" class="banner-section">
-    <div class="banner-content">
-      <p class="banner-eyebrow">Burguer <span>•</span> Friends <span>•</span> Good Times</p>
-      <h1>Mais Que Um<br><span class="highlight">Lanche.</span></h1>
-      <p class="banner-description">O melhor lanche da cidade, feito com ingredientes frescos e de qualidade.</p>
+    <div class="banner-content container">
+      <p class="banner-status" :class="{ fechada: !statusLoja.aberto }"><span class="ponto"></span>{{ statusLoja.texto }}</p>
+      <h1>Mais que um<br><span class="highlight">lanche.</span></h1>
+      <p class="banner-description">
+        Burgers artesanais com blend da casa, pão brioche e muito queijo. Peça pelo site e receba em casa.
+      </p>
       <div class="banner-actions">
-        <AppButton>Cardápio <span class="mdi mdi-arrow-right"></span></AppButton>
-        <AppBorderButton>Carrinho <span class="mdi mdi-cart-outline"></span></AppBorderButton>
+        <AppButton @click="rolarPara('cardapio')">Ver cardápio <span class="mdi mdi-arrow-right"></span></AppButton>
+        <AppBorderButton v-if="cart.totalItens" @click="cart.open">
+          Meu pedido · {{ brl(cart.totalPreco) }} <span class="mdi mdi-cart-outline"></span>
+        </AppBorderButton>
+        <AppBorderButton v-else @click="rolarPara('como-funciona')">Como funciona</AppBorderButton>
       </div>
+
+      <ul class="banner-perks">
+        <li><span class="mdi mdi-moped-outline"></span> Entrega na sua casa</li>
+        <li><span class="mdi mdi-whatsapp"></span> Pedido confirmado no WhatsApp</li>
+        <li><span class="mdi mdi-cash-multiple"></span> Pix, cartão ou dinheiro na entrega</li>
+      </ul>
     </div>
 
-    <a href="#" class="banner-scroll-cue" aria-label="Rolar para baixo">
+    <a href="#cardapio" class="banner-scroll-cue" aria-label="Ir para o cardápio" @click.prevent="rolarPara('cardapio')">
       <span class="mdi mdi-chevron-down"></span>
     </a>
   </section>
@@ -26,12 +44,13 @@ import AppButton from '@/components/buttons/appButton.vue';
 section.banner-section {
   position: relative;
   display: flex;
-  justify-content: flex-start;
   align-items: center;
   min-height: 100vh;
-  background-image: url("@/assets/images/home/banner.png");
+  min-height: 100svh;
+  padding: calc(var(--header-height) + 24px) 0 96px;
+  background-image: url("@/assets/images/home/banner.webp");
   background-size: cover;
-  background-position: center;
+  background-position: 35% center;
   overflow: hidden;
 }
 
@@ -39,76 +58,112 @@ section.banner-section::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(8, 8, 8, 0.92) 0%,
-    rgba(8, 8, 8, 0.72) 30%,
-    rgba(8, 8, 8, 0.25) 60%,
-    rgba(8, 8, 8, 0.05) 100%
-  ),
-  linear-gradient(0deg, rgba(8, 8, 8, 0.6) 0%, rgba(8, 8, 8, 0) 30%);
+  background:
+    linear-gradient(90deg, rgba(8, 8, 8, 0.95) 0%, rgba(8, 8, 8, 0.75) 32%, rgba(8, 8, 8, 0.2) 62%, rgba(8, 8, 8, 0) 100%),
+    linear-gradient(0deg, var(--background-primary) 0%, rgba(8, 8, 8, 0) 28%);
 }
 
 .banner-content {
   position: relative;
   z-index: 1;
-  max-width: 820px;
-  padding: 0 200px;
-  text-align: left;
   animation: banner-rise 0.7s ease both;
 }
 
-.banner-eyebrow {
-  display: flex;
+/* "● Aberto agora · fecha às 23h" */
+.banner-status {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--text-secondary);
+  margin-bottom: 20px;
+  padding: 7px 14px;
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  border-radius: var(--radius-full);
+  background-color: rgba(8, 8, 8, 0.5);
+  color: #6ee7a0;
   font-size: var(--text-small);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 16px;
+  font-weight: 700;
 }
 
-.banner-eyebrow span {
-  color: var(--color-primary);
+.banner-status .ponto {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background-color: currentColor;
+  animation: piscar 2s ease-in-out infinite;
+}
+
+.banner-status.fechada {
+  border-color: rgba(220, 53, 69, 0.4);
+  color: #ff8a95;
+}
+
+.banner-status.fechada .ponto {
+  animation: none;
+}
+
+@keyframes piscar {
+  50% {
+    opacity: 0.35;
+  }
 }
 
 section.banner-section h1 {
-  font-family: 'Bebas Neue', var(--font-secondary);
-  font-size: clamp(3rem, 8vw, 5.5rem);
-  font-weight: var(--font-weight-bold);
-  line-height: 0.95;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3.4rem, 9vw, 7rem);
+  font-weight: 400;
+  line-height: 0.92;
   letter-spacing: 0.01em;
   text-transform: uppercase;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .banner-description {
-  max-width: 42ch;
+  max-width: 44ch;
   color: var(--text-secondary);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 32px;
 }
 
 .banner-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.banner-perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  list-style: none;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+}
+
+.banner-perks li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.banner-perks .mdi {
+  color: var(--color-primary);
+  font-size: 1.15rem;
 }
 
 .banner-scroll-cue {
   position: absolute;
   left: 50%;
-  bottom: 32px;
+  bottom: 28px;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: 1.5px solid var(--border-light);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-full);
   color: var(--text-primary);
   font-size: 1.3rem;
@@ -143,22 +198,21 @@ section.banner-section h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .banner-content {
-    animation: none;
-  }
-
-  .banner-scroll-cue {
+  .banner-content,
+  .banner-scroll-cue,
+  .banner-status .ponto {
     animation: none;
   }
 }
 
 @media (max-width: 640px) {
-  section.banner-section::before {
-    background: linear-gradient(180deg, rgba(8, 8, 8, 0.65) 0%, rgba(8, 8, 8, 0.78) 50%, rgba(8, 8, 8, 0.9) 100%);
+  section.banner-section {
+    align-items: flex-end;
+    background-position: 65% center;
   }
 
-  .banner-content {
-    padding: 0 24px;
+  section.banner-section::before {
+    background: linear-gradient(180deg, rgba(8, 8, 8, 0.35) 0%, rgba(8, 8, 8, 0.7) 45%, rgba(8, 8, 8, 0.97) 100%);
   }
 
   .banner-actions {
@@ -167,7 +221,12 @@ section.banner-section h1 {
   }
 
   .banner-actions > * {
+    flex: 1;
     justify-content: center;
+  }
+
+  .banner-scroll-cue {
+    display: none;
   }
 }
 </style>

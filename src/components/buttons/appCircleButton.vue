@@ -17,7 +17,7 @@ const emit = defineEmits(['click'])
   <button
     :type="type"
     :disabled="disabled"
-    @click="emit('click')"
+    @click="emit('click', $event)"
   >
     <slot />
   </button>

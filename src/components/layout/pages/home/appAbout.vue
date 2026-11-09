@@ -1,18 +1,40 @@
 <script setup>
-import AppBorderButton from '@/components/buttons/appBorderButton.vue';
+import AppButton from '@/components/buttons/appButton.vue';
 
+const destaques = [
+    { icone: 'mdi-leaf', titulo: 'Ingredientes frescos', texto: 'Selecionados todos os dias.' },
+    { icone: 'mdi-fire', titulo: 'Feito na hora', texto: 'Na chapa só depois do seu pedido.' },
+    { icone: 'mdi-crown-outline', titulo: 'Receitas da casa', texto: 'Blend e molhos exclusivos Urban.' },
+];
+
+function pedir() {
+    document.getElementById('cardapio')?.scrollIntoView({ behavior: 'smooth' });
+}
 </script>
 
 <template>
     <section id="sobre" class="about-section">
-        <div class="about-content">
-            <p class="about-eyebrow"><span class="about-eyebrow-line"></span>Sobre Nós</p>
-            <h2>Não É Sobre Um <span class="highlight">Hambúrguer</span></h2>
-            <p class="about-description">É o encontro. É a fome. É aquela primeira mordida. É URBAN.</p>
-            <AppBorderButton>
-                Saiba mais
-                <span class="mdi mdi-arrow-right"></span>
-            </AppBorderButton>
+        <div class="container about-inner">
+            <div v-reveal class="about-content">
+                <p class="eyebrow">Sobre nós</p>
+                <h2 class="section-title">Não é sobre um <span class="highlight">hambúrguer</span></h2>
+                <p class="section-lead">É o encontro. É a fome. É aquela primeira mordida. É URBAN.</p>
+
+                <ul class="about-destaques">
+                    <li v-for="d in destaques" :key="d.titulo">
+                        <span class="mdi" :class="d.icone" aria-hidden="true"></span>
+                        <div>
+                            <strong>{{ d.titulo }}</strong>
+                            <small>{{ d.texto }}</small>
+                        </div>
+                    </li>
+                </ul>
+
+                <AppButton @click="pedir">
+                    Fazer meu pedido
+                    <span class="mdi mdi-arrow-right"></span>
+                </AppButton>
+            </div>
         </div>
     </section>
 </template>
@@ -22,12 +44,9 @@ import AppBorderButton from '@/components/buttons/appBorderButton.vue';
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     min-height: 80vh;
-    padding: 80px 0;
-    background-image: url("@/assets/images/home/about.png");
-    background-size: cover;
-    background-position: center;
+    padding-block: clamp(80px, 10vw, 120px);
+    background: url("@/assets/images/home/about.webp") center / cover no-repeat;
     overflow: hidden;
 }
 
@@ -35,79 +54,74 @@ import AppBorderButton from '@/components/buttons/appBorderButton.vue';
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-        270deg,
-        rgba(8, 8, 8, 0.9) 0%,
-        rgba(8, 8, 8, 0.68) 35%,
-        rgba(8, 8, 8, 0.2) 65%,
-        rgba(8, 8, 8, 0.05) 100%
-    );
+    background:
+        linear-gradient(270deg, rgba(8, 8, 8, 0.95) 0%, rgba(8, 8, 8, 0.75) 38%, rgba(8, 8, 8, 0.15) 70%, rgba(8, 8, 8, 0) 100%),
+        linear-gradient(180deg, var(--background-primary) 0%, rgba(8, 8, 8, 0) 18%, rgba(8, 8, 8, 0) 82%, var(--background-secondary) 100%);
+}
+
+.about-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .about-content {
-    position: relative;
-    z-index: 1;
-    max-width: 560px;
-    width: 100%;
-    padding: 0 40px;
-    text-align: left;
+    max-width: 500px;
 }
 
-.about-eyebrow {
+.about-content .section-lead {
+    margin-bottom: 32px;
+}
+
+.about-destaques {
+    display: grid;
+    gap: 18px;
+    list-style: none;
+    margin-bottom: 36px;
+}
+
+.about-destaques li {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
+}
+
+.about-destaques .mdi {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(245, 169, 0, 0.4);
+    border-radius: var(--radius);
+    background-color: rgba(245, 169, 0, 0.08);
+    color: var(--color-primary);
+    font-size: 1.4rem;
+}
+
+.about-destaques strong {
+    display: block;
+    font-weight: 700;
+}
+
+.about-destaques small {
     color: var(--text-secondary);
     font-size: var(--text-small);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-}
-
-.about-eyebrow-line {
-    width: 32px;
-    height: 2px;
-    background-color: var(--color-primary);
-}
-
-.about-section h2 {
-    font-family: 'Bebas Neue', var(--font-secondary);
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: var(--font-weight-bold);
-    line-height: 1;
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-}
-
-.about-description {
-    max-width: 42ch;
-    color: var(--text-secondary);
-    font-size: 1.05rem;
-    line-height: 1.6;
-    margin-bottom: 32px;
 }
 
 @media (max-width: 768px) {
     .about-section {
-        justify-content: center;
         min-height: auto;
-        padding: 96px 0;
     }
 
     .about-section::before {
-        background: linear-gradient(180deg, rgba(8, 8, 8, 0.55) 0%, rgba(8, 8, 8, 0.8) 60%, rgba(8, 8, 8, 0.92) 100%);
+        background: linear-gradient(180deg, rgba(8, 8, 8, 0.6) 0%, rgba(8, 8, 8, 0.85) 50%, var(--background-secondary) 100%);
     }
 
-    .about-content {
-        max-width: 480px;
-        padding: 0 24px;
-        text-align: center;
-    }
-
-    .about-eyebrow {
-        justify-content: center;
+    .about-inner {
+        justify-content: flex-start;
     }
 }
 </style>
