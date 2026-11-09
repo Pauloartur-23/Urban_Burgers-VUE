@@ -6,21 +6,26 @@ import AppCicleButton from '@/components/buttons/appCircleButton.vue';
 import AppLogo from '@/components/layout/logo/appLogo.vue';
 import { useCartStore } from '@/stores/cart.js';
 import { useCurtidosStore } from '@/stores/curtidos.js';
-import { getUsuarioAtual, isAutenticado } from '@/services/usuario.js';
+import { carregarUsuario, isAutenticado, usuarioLogado } from '@/services/usuario.js';
 
 const cart = useCartStore();
 const curtidos = useCurtidosStore();
 const router = useRouter();
 const route = useRoute();
 
-const isStaff = ref(false);
-const primeiroNome = ref('');
+// admin não faz pedidos: o perfil dele leva direto ao painel e o carrinho some
+const isStaff = computed(() => Boolean(usuarioLogado.value?.is_staff));
+const primeiroNome = computed(() => {
+    const u = usuarioLogado.value;
+    return u ? (u.name || u.email).split(/[\s@]/)[0] : '';
+});
 const menuAberto = ref(false);
 const logado = isAutenticado();
 const totalCarrinho = computed(() => cart.totalPreco.toFixed(2).replace('.', ','));
+const destinoPerfil = computed(() => (!logado ? '/login' : isStaff.value ? '/painel' : '/conta'));
 
 function handleAuthClick() {
-    router.push(logado ? '/conta' : '/login');
+    router.push(destinoPerfil.value);
 }
 
 const navLinks = [
@@ -98,14 +103,7 @@ function setupScrollSpy(attempts = 0) {
 watch(() => route.fullPath, () => { menuAberto.value = false; });
 
 onMounted(() => {
-    if (logado) {
-        getUsuarioAtual()
-            .then((u) => {
-                isStaff.value = u.is_staff;
-                primeiroNome.value = (u.name || u.email).split(/[\s@]/)[0];
-            })
-            .catch(() => {});
-    }
+    carregarUsuario();
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     if (naHome.value) setupScrollSpy();
@@ -133,15 +131,12 @@ onUnmounted(() => {
                             @click.prevent="link.to ? irPara(link.to) : goToSection(link.id)"
                         >{{ link.label }}</a>
                     </li>
-                    <li class="nav-mobile-only">
+                    <li v-if="!isStaff" class="nav-mobile-only">
                         <a href="/curtidos" @click.prevent="irPara('/curtidos')">Curtidos</a>
                     </li>
-                    <li v-if="isStaff" class="nav-mobile-only">
-                        <a href="/painel" @click.prevent="irPara('/painel')">Painel admin</a>
-                    </li>
                     <li class="nav-mobile-only">
-                        <a :href="logado ? '/conta' : '/login'" @click.prevent="irPara(logado ? '/conta' : '/login')">
-                            {{ logado ? 'Minha conta' : 'Entrar' }}
+                        <a :href="destinoPerfil" @click.prevent="irPara(destinoPerfil)">
+                            {{ !logado ? 'Entrar' : isStaff ? 'Painel admin' : 'Minha conta' }}
                         </a>
                     </li>
                 </ul>
@@ -149,18 +144,13 @@ onUnmounted(() => {
 
             <div class="header-actions">
                 <ul class="header-icons">
-                    <li v-if="isStaff" class="header-cart hide-mobile">
-                        <AppCicleButton aria-label="Painel do administrador" title="Painel admin" @click="router.push('/painel')">
-                            <span class="mdi mdi-cog-outline"></span>
-                        </AppCicleButton>
-                    </li>
-                    <li class="header-cart hide-mobile">
+                    <li v-if="!isStaff" class="header-cart hide-mobile">
                         <AppCicleButton aria-label="Favoritos" title="Curtidos" @click="router.push('/curtidos')">
                             <span class="mdi mdi-heart-outline"></span>
                         </AppCicleButton>
                         <span v-if="curtidos.totalCurtidos > 0" class="header-cart-badge">{{ curtidos.totalCurtidos }}</span>
                     </li>
-                    <li class="header-cart">
+                    <li v-if="!isStaff" class="header-cart">
                         <!-- com itens, o carrinho vira uma pílula amarela com o total do pedido -->
                         <button
                             type="button"
@@ -178,9 +168,18 @@ onUnmounted(() => {
 
                 <span class="header-divider hide-mobile"></span>
 
-                <button v-if="logado" type="button" class="user-chip hide-mobile" title="Minha conta" @click="handleAuthClick">
-                    <span class="user-avatar">{{ (primeiroNome || '?')[0].toUpperCase() }}</span>
-                    <span class="user-nome">{{ primeiroNome || 'Minha conta' }}</span>
+                <button
+                    v-if="logado"
+                    type="button"
+                    class="user-chip hide-mobile"
+                    :title="isStaff ? 'Painel administrativo' : 'Minha conta'"
+                    @click="handleAuthClick"
+                >
+                    <span class="user-avatar">
+                        <span v-if="isStaff" class="mdi mdi-shield-crown-outline"></span>
+                        <template v-else>{{ (primeiroNome || '?')[0].toUpperCase() }}</template>
+                    </span>
+                    <span class="user-nome">{{ isStaff ? 'Painel' : primeiroNome || 'Minha conta' }}</span>
                     <span class="mdi mdi-chevron-right"></span>
                 </button>
                 <AppBorderButton v-else class="hide-mobile" @click="handleAuthClick">

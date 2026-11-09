@@ -3,6 +3,7 @@
 import { computed } from 'vue';
 import { useCartStore } from '@/stores/cart.js';
 import { useCurtidosStore } from '@/stores/curtidos.js';
+import { usuarioLogado } from '@/services/usuario.js';
 
 const props = defineProps({
     item: { type: Object, required: true }, // { id, name, desc, preco, img }
@@ -14,6 +15,8 @@ const curtidos = useCurtidosStore();
 const qtd = computed(() => cart.items.find((i) => i.id === props.item.id)?.qtd ?? 0);
 const curtido = computed(() => curtidos.isCurtido(props.item.id));
 const preco = computed(() => props.item.preco.toFixed(2).replace('.', ','));
+// admin só vê o cardápio: não curte nem adiciona ao carrinho
+const ehAdmin = computed(() => Boolean(usuarioLogado.value?.is_staff));
 </script>
 
 <template>
@@ -26,6 +29,7 @@ const preco = computed(() => props.item.preco.toFixed(2).replace('.', ','));
                 <span class="menu-card-ver">Ver detalhes <span class="mdi mdi-arrow-right"></span></span>
             </router-link>
             <button
+                v-if="!ehAdmin"
                 type="button"
                 class="menu-card-like"
                 :class="{ 'is-curtido': curtido }"
@@ -44,7 +48,8 @@ const preco = computed(() => props.item.preco.toFixed(2).replace('.', ','));
             <div class="menu-card-footer">
                 <p class="menu-card-price"><small>R$</small> {{ preco }}</p>
 
-                <button v-if="qtd === 0" type="button" class="menu-card-add" @click="cart.addItem(item)">
+                <template v-if="ehAdmin"></template>
+                <button v-else-if="qtd === 0" type="button" class="menu-card-add" @click="cart.addItem(item)">
                     <span class="mdi mdi-plus"></span> Adicionar
                 </button>
 

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { isAutenticado } from '@/services/usuario.js'
+import { isAutenticado, usuarioLogado } from '@/services/usuario.js'
 import { getMeusCurtidos, toggleCurtidoApi } from '@/services/curtidosApi.js'
 
 function mapCurtidosDaApi(curtidos) {
@@ -33,6 +33,7 @@ export const useCurtidosStore = defineStore('curtidos', () => {
 
   // Curtir é só para quem tem conta: sem login vai para /login e volta para a mesma página depois.
   async function toggleCurtido(item) {
+    if (usuarioLogado.value?.is_staff) return // admin não curte itens
     if (!isAutenticado()) {
       const atual = router.currentRoute.value
       router.push({ path: '/login', query: { next: atual.path === '/' ? '/#cardapio' : atual.fullPath, motivo: 'curtir' } })

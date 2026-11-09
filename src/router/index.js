@@ -14,7 +14,7 @@ import ItemView from '../views/ItemView.vue'
 import FinalizarView from '../views/FinalizarView.vue'
 import PedidoView from '../views/PedidoView.vue'
 import ErroView from '../views/ErroView.vue'
-import { isAutenticado } from '../services/usuario.js'
+import { carregarUsuario, isAutenticado } from '../services/usuario.js'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -98,10 +98,14 @@ const router = createRouter({
 })
 
 // páginas da conta: sem login vai para /login e volta depois de entrar
-router.beforeEach((to) => {
+// páginas de cliente (conta, pedido, curtidos): o admin não faz pedidos, então vai para o painel
+const SO_CLIENTE = ['conta', 'finalizar', 'pedido', 'curtidos']
+
+router.beforeEach(async (to) => {
   if (to.meta.requerLogin && !isAutenticado()) {
     return { path: '/login', query: { next: to.fullPath, ...(to.meta.motivo && { motivo: to.meta.motivo }) } }
   }
+  if (SO_CLIENTE.includes(to.name) && (await carregarUsuario())?.is_staff) return { path: '/painel' }
   // já logado não precisa ver login/cadastro
   if (['login', 'registro'].includes(to.name) && isAutenticado()) return { path: '/conta' }
 })

@@ -5,11 +5,13 @@ import { useMenuStore } from '@/assets/data/menu.js';
 import { useCartStore } from '@/stores/cart.js';
 import { useCurtidosStore } from '@/stores/curtidos.js';
 import MenuCard from '@/components/menu/MenuCard.vue';
+import { usuarioLogado } from '@/services/usuario.js';
 
 const route = useRoute();
 const menuStore = useMenuStore();
 const cart = useCartStore();
 const curtidos = useCurtidosStore();
+const ehAdmin = computed(() => Boolean(usuarioLogado.value?.is_staff));
 
 const carregando = ref(true);
 const erro = ref(false);
@@ -91,7 +93,13 @@ async function adicionar() {
                     <p class="item-preco"><small>R$</small> {{ brl(item.preco) }}</p>
                     <p class="item-desc">{{ item.desc }}</p>
 
-                    <div class="item-acoes">
+                    <p v-if="ehAdmin" class="item-admin">
+                        <span class="mdi mdi-shield-crown-outline"></span>
+                        Você está como administrador e não faz pedidos.
+                        <router-link to="/painel" class="btn btn-outline">Editar no painel</router-link>
+                    </p>
+
+                    <div v-else class="item-acoes">
                         <div class="qtd" role="group" aria-label="Quantidade">
                             <button type="button" aria-label="Diminuir" :disabled="qtd <= 1" @click="qtd--">
                                 <span class="mdi mdi-minus"></span>
@@ -119,7 +127,7 @@ async function adicionar() {
                         </button>
                     </div>
 
-                    <Transition name="aviso" mode="out-in">
+                    <Transition v-if="!ehAdmin" name="aviso" mode="out-in">
                         <p v-if="adicionado" class="item-aviso">
                             <span class="mdi mdi-check-circle"></span> Adicionado! Você tem {{ noCarrinho }} no carrinho.
                             <button type="button" @click="cart.open">Ver pedido</button>
@@ -252,6 +260,23 @@ async function adicionar() {
     color: var(--text-secondary);
     font-size: 1.1rem;
     line-height: 1.65;
+}
+
+.item-admin {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    background-color: var(--background-card);
+    color: var(--text-secondary);
+}
+
+.item-admin > .mdi {
+    color: var(--color-primary);
+    font-size: 1.3rem;
 }
 
 .item-acoes {

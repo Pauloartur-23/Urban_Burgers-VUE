@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { isAutenticado } from '@/services/usuario.js'
+import { isAutenticado, usuarioLogado } from '@/services/usuario.js'
 import { useRouter } from 'vue-router'
 import {
   adicionarItemCarrinho,
@@ -28,6 +28,10 @@ export const useCartStore = defineStore('cart', () => {
 
   // Carrinho é só para quem está logado: sem login, manda para /login e volta para cá depois.
   function exigirLogin() {
+    if (usuarioLogado.value?.is_staff) {
+      router.push('/painel') // admin não faz pedidos
+      return false
+    }
     if (isAutenticado()) return true
     const atual = router.currentRoute.value
     router.push({ path: '/login', query: { next: atual.path === '/' ? '/#cardapio' : atual.fullPath, motivo: 'carrinho' } })
