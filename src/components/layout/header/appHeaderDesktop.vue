@@ -6,7 +6,7 @@ import AppCicleButton from '@/components/buttons/appCircleButton.vue';
 import AppLogo from '@/components/layout/logo/appLogo.vue';
 import { useCartStore } from '@/stores/cart.js';
 import { useCurtidosStore } from '@/stores/curtidos.js';
-import { carregarUsuario, isAutenticado, usuarioLogado } from '@/services/usuario.js';
+import { carregarUsuario, isAutenticado, logout, usuarioLogado } from '@/services/usuario.js';
 
 const cart = useCartStore();
 const curtidos = useCurtidosStore();
@@ -23,6 +23,12 @@ const menuAberto = ref(false);
 const logado = isAutenticado();
 const totalCarrinho = computed(() => cart.totalPreco.toFixed(2).replace('.', ','));
 const destinoPerfil = computed(() => (!logado ? '/login' : isStaff.value ? '/painel' : '/conta'));
+
+// recarrega na home para carrinho, curtidos e header voltarem ao estado "deslogado"
+function sair() {
+    logout();
+    window.location.href = '/';
+}
 
 function handleAuthClick() {
     router.push(destinoPerfil.value);
@@ -139,6 +145,9 @@ onUnmounted(() => {
                             {{ !logado ? 'Entrar' : isStaff ? 'Painel admin' : 'Minha conta' }}
                         </a>
                     </li>
+                    <li v-if="logado" class="nav-mobile-only">
+                        <a href="/" @click.prevent="sair">Sair da conta</a>
+                    </li>
                 </ul>
             </nav>
 
@@ -181,6 +190,9 @@ onUnmounted(() => {
                     </span>
                     <span class="user-nome">{{ isStaff ? 'Painel' : primeiroNome || 'Minha conta' }}</span>
                     <span class="mdi mdi-chevron-right"></span>
+                </button>
+                <button v-if="logado" type="button" class="sair-btn hide-mobile" title="Sair da conta" aria-label="Sair da conta" @click="sair">
+                    <span class="mdi mdi-logout"></span>
                 </button>
                 <AppBorderButton v-else class="hide-mobile" @click="handleAuthClick">
                     Entrar
@@ -298,6 +310,26 @@ header.is-scrolled .header-logo :deep(img) {
 }
 
 /* usuário logado */
+.sair-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-full);
+    background: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.sair-btn:hover {
+    border-color: #dc3545;
+    color: #ff8a95;
+}
+
 .user-chip {
     display: inline-flex;
     align-items: center;

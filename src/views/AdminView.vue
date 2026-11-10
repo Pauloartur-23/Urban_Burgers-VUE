@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { getUsuarioAtual, isAutenticado } from '@/services/usuario.js';
+import { getUsuarioAtual, isAutenticado, logout } from '@/services/usuario.js';
 import { fetchCategorias, fetchItens } from '@/services/menu.js';
 import {
     apagarCategoria, apagarItem, atualizarCategoria, atualizarItem,
@@ -54,6 +54,11 @@ onMounted(async () => {
         carregando.value = false;
     }
 });
+
+function sair() {
+    logout();
+    window.location.href = '/';
+}
 
 function mostrarAviso(msg) {
     aviso.value = msg;
@@ -135,8 +140,15 @@ async function removerCategoria(cat) {
 
 <template>
     <div class="page">
-        <p class="eyebrow">Painel do administrador</p>
-        <h1>Painel da <span class="highlight">loja</span></h1>
+        <div class="admin-topo">
+            <div>
+                <p class="eyebrow">Painel do administrador</p>
+                <h1>Painel da <span class="highlight">loja</span></h1>
+            </div>
+            <button type="button" class="btn btn-outline" @click="sair">
+                <span class="mdi mdi-logout"></span> Sair da conta
+            </button>
+        </div>
 
         <p v-if="carregando">Carregando...</p>
 
@@ -263,6 +275,14 @@ async function removerCategoria(cat) {
 </template>
 
 <style scoped>
+.admin-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+}
+
 .admin-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
